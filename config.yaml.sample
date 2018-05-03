@@ -1,0 +1,41 @@
+
+irc:
+    nick: boccob
+    user: boccob
+    channels:
+        - channel
+        - somechannel
+        - #somethingelse
+    server: irc.somewhere.com
+    port: 6667
+    ping_interval: 240
+    timeout_sec: 360
+    reconnect: true
+ownerlist:
+  - you
+  - me
+  - thatguy
+automessages:
+  wiki: 'Our wiki is at https://somewiki.com/'
+  auto: 'Hi this is an automated message'
+  shutup:  "If you prefer not to receive automated messages in the future, please respond with 'shutup'."
+services:
+  identify: "IDENTIFY boccob forsoothacanardshallnotretardmysatiation"
+  autocmd:  "op #somethingelse"
+redis:
+  host: localhost
+  port: 6379
+  db: 7
+redis2:
+  host: localhost
+  port: 6379
+  db: 8
+redis4:
+  host: localhost
+  port: 6379
+  db: 10
+elasticsearch:
+  host: localhost
+  port: 9200
+subjectfileloc: "/dir/to/your/text/file.txt"
+run_bot: 0
