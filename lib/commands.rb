@@ -349,22 +349,6 @@ class Dispatcher
 #    end
 #  end
   
-  # Trigger building a package-mirroring job w/ package, optional version,
-  # optional 'download deps' flag (note: not all jobs use this last one.)
-  def _mirror(jobname, package, version=nil, deps=true)
-    # Deal with PACKAGE= VERSION= style invocation
-    if package.is_a? Hash
-      params = package
-    # Deal with positional args
-    else
-      params = {'PACKAGE' => package}
-      params['VERSION'] = version if version
-      params['DEPS'] = deps ? "true" : "false"
-    end
-    # Submit to !build
-    build jobname, :parameters => params
-  end
-
   def channel_reply(txt, user=nil)
     user ||= @msg.user.nick
     @msg.channel.send "#{user}: #{txt}"
