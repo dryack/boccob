@@ -141,7 +141,10 @@ class Dispatcher
     #  return @msg.reply "Search is disabled for non-owners at this time."
     #end
     search_term = search_term.join(" ")
-    run_search("private", search_term)
+    result = run_search("private", search_term)
+    # manage search history - don't add empty results
+    update_search_history(search_term) unless result[0] == {}
+    send_output(result[0]) 
   end
   
   def recent(number=10)
@@ -283,7 +286,7 @@ class Dispatcher
 #       end
 #    end
 #  end
-
+  
   def run_search(type="private", search_term)
     # query type for later consideration:
     # http://nocf-www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html
@@ -301,15 +304,12 @@ class Dispatcher
     result['hits']['hits'].each { |x|
       output[x['_source']['title']].push(x['_source']['page'])
     }
-    if output == {}
-      @msg.user.send "No results returned."
-      return
-    end
-    # manage search history - don't add empty results
-    update_search_history(search_term) unless output == {}
-    output.keys.sort.each { |k| output[k] = output.delete k }
+  end
+
+  def send_output(output)
+    if output == {} then return @msg.user.send "No results returned." end
     max_key_length = output.keys.max {|a,b| a.length <=> b.length }.length
-    output.each_pair { |k,v|
+    clean_prep_output(output).each_pair { |k,v|
       if type == "public"
         @msg.reply "#{k}, #{plural_if_needed(v.count, 'page')} #{v.sort.join(', ')}" unless k == "{}"
       else
@@ -319,7 +319,11 @@ class Dispatcher
     @msg.user.send "End of results."
     @msg.reply "End results for search \"#{search_term}\"" unless type == "private"
   end
-  
+ 
+  def clean_prep_output(output)
+    return output.keys.sort.each { |k| output[k] = output.delete k }
+  end
+
   def update_search_history(search_term)
     $redis_search_history.rpush "recent_searches", ["#{@msg.user.nick}","#{search_term}"].to_json
     $redis_search_history.ltrim "recent_searches", -100, -1 #storing 100 searches
@@ -349,27 +353,6 @@ class Dispatcher
 #    end
 #  end
   
-  # Trigger building a package-mirroring job w/ package, optional version,
-  # optional 'download deps' flag (note: not all jobs use this last one.)
-  def _mirror(jobname, package, version=nil, deps=true)
-    # Deal with PACKAGE= VERSION= style invocation
-    if package.is_a? Hash
-      params = package
-    # Deal with positional args
-    else
-      params = {'PACKAGE' => package}
-      params['VERSION'] = version if version
-      params['DEPS'] = deps ? "true" : "false"
-    end
-    # Submit to !build
-    build jobname, :parameters => params
-  end
-
-  def channel_reply(txt, user=nil)
-    user ||= @msg.user.nick
-    @msg.channel.send "#{user}: #{txt}"
-  end
-
   # i did a thing - i should use it... eventually?
   def nick_here?(nick)
     @msg.channel.users.map {|user, modes| user}.include? nick
