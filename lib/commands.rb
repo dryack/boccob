@@ -143,8 +143,7 @@ class Dispatcher
     search_term = search_term.join(" ")
     result = run_search(search_term)
     # manage search history - don't add empty results
-    #update_search_history(search_term) unless result[0] == {}
-    update_search_history(search_term) unless result == {}
+    update_search_history(search_term) unless result[0] == {}
     send_output("private",result) 
   end
   
