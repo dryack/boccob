@@ -141,12 +141,11 @@ class Dispatcher
     #  return @msg.reply "Search is disabled for non-owners at this time."
     #end
     search_term = search_term.join(" ")
-    result = run_search("private", search_term)
-    p "result bsearch: #{result}"
+    result = run_search(search_term)
     # manage search history - don't add empty results
     #update_search_history(search_term) unless result[0] == {}
     update_search_history(search_term) unless result == {}
-    send_output(result) 
+    send_output("private",result) 
   end
   
   def recent(number=10)
@@ -270,7 +269,6 @@ class Dispatcher
 
   private
 
-
 #  from standards discussion at work - fix my garbage
 #
 #  def coordinating_method
@@ -289,7 +287,7 @@ class Dispatcher
 #    end
 #  end
   
-  def run_search(type="private", search_term)
+  def run_search(search_term)
     # query type for later consideration:
     # http://nocf-www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html
     # result = @es.search index: 'codex', sort: '_id', _source_include: ['title','page'], body: { query: { simple_query_string: { query: "Boccob"} } }
@@ -309,12 +307,11 @@ class Dispatcher
     output
   end
 
-  def send_output(output)
-    p output
+  def send_output(type="private", output)
     if output == {} then return @msg.user.send "No results returned." end
     max_key_length = output.keys.max {|a,b| a.length <=> b.length }.length
-    output = output.keys.sort.each { |k| output[k] = output.delete k }
-   output.each_pair { |k,v|
+    output.keys.sort.each { |k| output[k] = output.delete k }
+    output.each_pair { |k,v|
       if type == "public"
         @msg.reply "#{k}, #{plural_if_needed(v.count, 'page')} #{v.sort.join(', ')}" unless k == "{}"
       else
@@ -323,10 +320,6 @@ class Dispatcher
     }
     @msg.user.send "End of results."
     @msg.reply "End results for search \"#{search_term}\"" unless type == "private"
-  end
- 
-  def clean_prep_output(output)
-    output.keys.sort.each { |k| output[k] = output.delete k }
   end
 
   def update_search_history(search_term)
