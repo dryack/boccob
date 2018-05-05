@@ -142,9 +142,11 @@ class Dispatcher
     #end
     search_term = search_term.join(" ")
     result = run_search("private", search_term)
+    p "result bsearch: #{result}"
     # manage search history - don't add empty results
-    update_search_history(search_term) unless result[0] == {}
-    send_output(result[0]) 
+    #update_search_history(search_term) unless result[0] == {}
+    update_search_history(search_term) unless result == {}
+    send_output(result) 
   end
   
   def recent(number=10)
@@ -304,12 +306,15 @@ class Dispatcher
     result['hits']['hits'].each { |x|
       output[x['_source']['title']].push(x['_source']['page'])
     }
+    output
   end
 
   def send_output(output)
+    p output
     if output == {} then return @msg.user.send "No results returned." end
     max_key_length = output.keys.max {|a,b| a.length <=> b.length }.length
-    clean_prep_output(output).each_pair { |k,v|
+    output = output.keys.sort.each { |k| output[k] = output.delete k }
+   output.each_pair { |k,v|
       if type == "public"
         @msg.reply "#{k}, #{plural_if_needed(v.count, 'page')} #{v.sort.join(', ')}" unless k == "{}"
       else
@@ -321,7 +326,7 @@ class Dispatcher
   end
  
   def clean_prep_output(output)
-    return output.keys.sort.each { |k| output[k] = output.delete k }
+    output.keys.sort.each { |k| output[k] = output.delete k }
   end
 
   def update_search_history(search_term)
