@@ -350,7 +350,12 @@ class Dispatcher
 #    end
 #  end
   
-  # i did a thing - i should use it... eventually?
+  def channel_reply(txt, user=nil)
+    user ||= @msg.user.nick
+    @msg.channel.send "#{user}: #{txt}"
+  end
+
+    # i did a thing - i should use it... eventually?
   def nick_here?(nick)
     @msg.channel.users.map {|user, modes| user}.include? nick
   end
